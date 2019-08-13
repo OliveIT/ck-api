@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const csvtojson = require('csvtojson')
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -21,18 +20,18 @@ app.get("/kittie", (req, res) => {
     let kittieInfo = jsonData[kitID];
     if (kittieInfo) {
       const formattedData = {
-        id:	Number(kittieInfo.id),
+        id: Number(kittieInfo.id),
         isGestating: kittieInfo.isGestating === "True",
         isReady: kittieInfo.isReady === "True",
         cooldownIndex: Number(kittieInfo.cooldownIndex),
-        nextActionAt:	Number(kittieInfo.nextActionAt),
-        siringWithId:	Number(kittieInfo.siringWithId),
-        birthTime:	Number(kittieInfo.birthTime),
-        matronId:	Number(kittieInfo.matronId),
-        sireId:	Number(kittieInfo.sireId),
-        generation:	Number(kittieInfo.generation),
-        genes:	kittieInfo.genes,
-        kai_genes:	kittieInfo.kai_genes,
+        nextActionAt: Number(kittieInfo.nextActionAt),
+        siringWithId: Number(kittieInfo.siringWithId),
+        birthTime: Number(kittieInfo.birthTime),
+        matronId: Number(kittieInfo.matronId),
+        sireId: Number(kittieInfo.sireId),
+        generation: Number(kittieInfo.generation),
+        genes: kittieInfo.genes,
+        kai_genes: kittieInfo.kai_genes,
       }
       return res.json({ success: true, data: formattedData });
     }
@@ -46,7 +45,8 @@ app.get("/kittie", (req, res) => {
 
 app.get("/", (req, res) => {
   res.json({
-    success: true, data: {
+    success: true,
+    data: {
       serverRunning: true,
       csvFullyLoaded: isCSVLoaded
     }
@@ -58,8 +58,25 @@ app.listen(port, () => console.log(`server running on port ${port} 🔥`));
 let isCSVLoaded = false;
 let jsonData;
 
-csvtojson().fromFile('./cryptokitties.csv')
-  .then((jsonobj) => {
+// let csvToJson = require('convert-csv-to-json');
+
+// let fileInputName = 'kittylist.csv'; 
+// let fileOutputName = 'kittylist.json';
+
+// csvToJson.fieldDelimiter(',').generateJsonFileFromCsv(fileInputName, fileOutputName);
+
+const fs = require('fs')
+
+fs.readFile('./kittylist.json', 'utf8', (err, jsonString) => {
+  if (err) {
+    console.log("Error reading file from disk:", err);
+    return
+  }
+  try {
+    jsonData = JSON.parse(jsonString);
     isCSVLoaded = true;
-    jsonData = jsonobj;
-  });
+    console.log("Finished loading.  total kittie count:", jsonData.length)
+  } catch (err) {
+    console.log('Error parsing JSON string:', err);
+  }
+})
