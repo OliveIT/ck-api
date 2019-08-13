@@ -12,14 +12,14 @@ const port = 8000;
 
 app.get("/kittie", (req, res) => {
 
-  if (!req.query || !parseInt(req.query.id) >= 0) {
+  if (!req.query || !(parseInt(req.query.id) >= 0)) {
     return res.status(400).json({ success: false, message: 'invalid id supplied' });
   }
 
   const kitID = parseInt(req.query.id);
 
   con.query(`SELECT * FROM kittylist WHERE id=${kitID} LIMIT 1`, function (err, result) {
-    if (err){
+    if (err || !result.length){
       return res.json({ success: false, data: 'kittie with this id doesnt exist' });
     }
 
