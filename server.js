@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const mysql = require('mysql');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -10,15 +11,19 @@ app.use(bodyParser.urlencoded({
 const port = 8000;
 
 app.get("/kittie", (req, res) => {
-  if (!isCSVLoaded) {
-    return res.status(500).json({ success: false, message: 'csv is not loaded fully' });
-  }
 
   const kitID = req.param('id', null);
 
   if (kitID >= 0) {
-    let kittieInfo = jsonData[kitID];
-    if (kittieInfo) {
+
+    con.query(`SELECT * FROM account_emailaddress WHERE id=${kitID} LIMIT 1`, function (err, result) {
+      if (err){
+        return res.json({ success: false, data: 'kittie with this id doesnt exist' });
+      }
+      console.log(result);
+
+      let kittieInfo = result[0];
+
       const formattedData = {
         id: Number(kittieInfo.id),
         isGestating: kittieInfo.isGestating === "True",
@@ -34,49 +39,22 @@ app.get("/kittie", (req, res) => {
         kai_genes: kittieInfo.kai_genes,
       }
       return res.json({ success: true, data: formattedData });
-    }
-    else {
-      return res.json({ success: false, data: 'kittie with this id doesnt exist' });
-    }
+    });
   }
 
   return res.status(400).json({ success: false, message: 'invalid id supplied' });
 });
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      serverRunning: true,
-      csvFullyLoaded: isCSVLoaded
-    }
-  });
-});
-
 app.listen(port, () => console.log(`server running on port ${port} 🔥`));
 
-let isCSVLoaded = false;
-let jsonData;
+let con = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "yourpass",
+  database: "kfdb"
+});
 
-// let csvToJson = require('convert-csv-to-json');
-
-// let fileInputName = 'kittylist.csv'; 
-// let fileOutputName = 'kittylist.json';
-
-// csvToJson.fieldDelimiter(',').generateJsonFileFromCsv(fileInputName, fileOutputName);
-
-const fs = require('fs')
-
-fs.readFile('./kittylist.json', 'utf8', (err, jsonString) => {
-  if (err) {
-    console.log("Error reading file from disk:", err);
-    return
-  }
-  try {
-    jsonData = JSON.parse(jsonString);
-    isCSVLoaded = true;
-    console.log("Finished loading.  total kittie count:", jsonData.length)
-  } catch (err) {
-    console.log('Error parsing JSON string:', err);
-  }
-})
+con.connect(function(err) {
+  if (err) throw err;
+  console.log("DB Connected!");
+});
