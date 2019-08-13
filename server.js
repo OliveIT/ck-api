@@ -7,7 +7,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-const port = 80;
+const port = 8000;
 
 app.get("/kittie", (req, res) => {
   if (!isCSVLoaded) {
